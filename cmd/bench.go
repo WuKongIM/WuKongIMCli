@@ -253,14 +253,14 @@ func (b *benchCMD) publisher(cli *client.Client, progress *uiprogress.Bar, msg [
 		})
 	}
 
-	// cli.SetOnSendack(func(sendackPacket *wkproto.SendackPacket) {
-	// 	finishWg.Done()
-	// })
+	cli.SetOnSendack(func(sendackPacket *wkproto.SendackPacket) {
+		finishWg.Done()
+	})
 	for i := 0; i < numMsg; i++ {
 		if progress != nil {
 			progress.Incr()
 		}
-		// finishWg.Add(1)
+		finishWg.Add(1)
 		err = cli.SendMessage(b.channel, msg, client.SendOptionWithNoEncrypt(false))
 		if err != nil {
 			log.Fatalf("SendMessage error: %v", err)
