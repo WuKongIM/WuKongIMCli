@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/WuKongIM/WuKongIM/pkg/client"
-	"github.com/WuKongIM/WuKongIM/pkg/lmproto"
+	"github.com/WuKongIM/WuKongIM/pkg/wkproto"
 	"github.com/WuKongIM/WuKongIMCli/bench"
 	"github.com/dustin/go-humanize"
 	"github.com/gosuri/uiprogress"
@@ -23,7 +23,7 @@ type benchCMD struct {
 	receiver   int
 	msgs       int
 	msgSize    int
-	ctx        *LiMaoContext
+	ctx        *WuKongIMContext
 	noProgress bool
 	channel    *client.Channel
 	pubSleep   time.Duration
@@ -32,7 +32,7 @@ type benchCMD struct {
 	toUID      string // 如果是p2p模式 则对应的接受者
 }
 
-func newBenchCMD(ctx *LiMaoContext) *benchCMD {
+func newBenchCMD(ctx *WuKongIMContext) *benchCMD {
 	b := &benchCMD{
 		ctx: ctx,
 	}
@@ -84,7 +84,7 @@ func (b *benchCMD) run(cmd *cobra.Command, args []string) error {
 	if b.p2p {
 		b.channel = client.NewChannel(b.toUID, 1)
 	} else {
-		b.channel = client.NewChannel(b.channelStr, 2)
+		b.channel = client.NewChannel(b.channelStr, 6)
 	}
 
 	var offset = func(putter int, counts []int) int {
@@ -184,7 +184,7 @@ func (b *benchCMD) runReceiver(bm *bench.Benchmark, cli *client.Client, startwg 
 			return state
 		})
 	}
-	messageHandler := func(msg *lmproto.RecvPacket) error {
+	messageHandler := func(msg *wkproto.RecvPacket) error {
 		received++
 		if received == 1 {
 			ch <- time.Now()
@@ -253,15 +253,15 @@ func (b *benchCMD) publisher(cli *client.Client, progress *uiprogress.Bar, msg [
 		})
 	}
 
-	cli.SetOnSendack(func(sendackPacket *lmproto.SendackPacket) {
-		finishWg.Done()
-	})
+	// cli.SetOnSendack(func(sendackPacket *wkproto.SendackPacket) {
+	// 	finishWg.Done()
+	// })
 	for i := 0; i < numMsg; i++ {
 		if progress != nil {
 			progress.Incr()
 		}
-		finishWg.Add(1)
-		err = cli.SendMessage(b.channel, msg, client.SendOptionWithNoEncrypt(true))
+		// finishWg.Add(1)
+		err = cli.SendMessage(b.channel, msg, client.SendOptionWithNoEncrypt(false))
 		if err != nil {
 			log.Fatalf("SendMessage error: %v", err)
 		}

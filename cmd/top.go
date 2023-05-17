@@ -23,7 +23,7 @@ type Stats struct {
 }
 
 type topCMD struct {
-	ctx          *LiMaoContext
+	ctx          *WuKongIMContext
 	urlStr       string
 	httpClient   *http.Client
 	limit        int
@@ -41,7 +41,7 @@ type topCMD struct {
 	body              *ui.Grid
 }
 
-func newTopCMD(ctx *LiMaoContext) *topCMD {
+func newTopCMD(ctx *WuKongIMContext) *topCMD {
 	b := &topCMD{
 		ctx:               ctx,
 		urlStr:            "http://127.0.0.1:1516",
@@ -461,7 +461,7 @@ func (t *topCMD) generateParagraphPlainText(
 	inBytesRate := Psize(t.displayRawBytes, int64(stats.Rates.InBytesRate))
 	outBytesRate := Psize(t.displayRawBytes, int64(stats.Rates.OutBytesRate))
 
-	info := "LiMaoIM server version %s (uptime: %s) %s\n"
+	info := "WuKongIM server version %s (uptime: %s) %s\n"
 	info += "Server:\n"
 	info += "  Load: CPU:  %.1f%%  Memory: %s  Slow Consumers: %d\n"
 	info += "  In:   Msgs: %s  Bytes: %s  Msgs/Sec: %.1f  Bytes/Sec: %s\n"

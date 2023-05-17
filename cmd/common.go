@@ -46,13 +46,16 @@ func (o *Options) ContextDir() string {
 	if u.HomeDir == "" {
 		return ""
 	}
-	return filepath.Join(u.HomeDir, ".config", "limao", "context")
+	return filepath.Join(u.HomeDir, ".config", "wukongim", "context")
 
 }
 
 func (o *Options) Load() error {
 	data, err := ioutil.ReadFile(o.metaFile())
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
 		return err
 	}
 	if len(data) == 0 {
@@ -101,12 +104,21 @@ func (o *Options) Save(name string) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(p, j, 0600)
+	pf, err := os.OpenFile(p, os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		return err
+	}
+	_, err = pf.Write(j)
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(o.metaFile(), []byte(name), 0600)
+	mf, err := os.OpenFile(o.metaFile(), os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		return err
+	}
+	_, err = mf.Write([]byte(name))
+	return err
 }
 
 func (o *Options) metaFile() string {

@@ -2,14 +2,14 @@
 ## 配置服务器信息（context）
 
 ```
-lim context add demo --server 127.0.0.1:7677 --token xxxx --description "LiMaoIM Demo"
+lim context add demo --server 127.0.0.1:7677 --token xxxx --description "WuKongIM Demo"
 ```
 
 ```
 
-LiMaoIM Configuration Context "demo"
+WuKongIM Configuration Context "demo"
 
-  Description: LiMaoIM Demo
+  Description: WuKongIM Demo
   Server URLs: 127.0.0.1:7979
 
 ```
@@ -62,7 +62,7 @@ lim bench ch001 --pub 1 -sub 1 --size 16
 Finished      0s [======================================================================================================================================================] 100%
 Finished      0s [======================================================================================================================================================] 100%
 
-LiMaoIM Pub/Sub stats: 5,894,441 msgs/sec ~ 89.94 MB/sec
+WuKongIM Pub/Sub stats: 5,894,441 msgs/sec ~ 89.94 MB/sec
  Pub stats: 3,517,660 msgs/sec ~ 53.68 MB/sec
  Sub stats: 2,957,796 msgs/sec ~ 45.13 MB/sec
 
@@ -89,7 +89,7 @@ Finished      0s [==============================================================
 Finished      0s [======================================================================================================================================================] 100%
 Finished      0s [======================================================================================================================================================] 100%
 
-LiMaoIM Pub/Sub stats: 7,123,965 msgs/sec ~ 108.70 MB/sec
+WuKongIM Pub/Sub stats: 7,123,965 msgs/sec ~ 108.70 MB/sec
  Pub stats: 1,188,419 msgs/sec ~ 18.13 MB/sec
  Sub stats: 5,937,525 msgs/sec ~ 90.60 MB/sec
   [1] 1,187,633 msgs/sec ~ 18.12 MB/sec (1000000 msgs)
@@ -129,7 +129,7 @@ Finished      0s [==============================================================
 Finished      0s [======================================================================================================================================================] 100%
 Finished      0s [======================================================================================================================================================] 100%
 
-LiMaoIM Pub/Sub stats: 7,019,849 msgs/sec ~ 107.11 MB/sec
+WuKongIM Pub/Sub stats: 7,019,849 msgs/sec ~ 107.11 MB/sec
  Pub stats: 1,172,667 msgs/sec ~ 17.89 MB/sec
   [1] 236,240 msgs/sec ~ 3.60 MB/sec (200000 msgs)
   [2] 236,168 msgs/sec ~ 3.60 MB/sec (200000 msgs)

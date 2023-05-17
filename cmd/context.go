@@ -13,16 +13,16 @@ type contextCMD struct {
 	description string
 	server      string
 	token       string
-	ctx         *LiMaoContext
+	ctx         *WuKongIMContext
 }
 
-func newContextCMD(ctx *LiMaoContext) *contextCMD {
+func newContextCMD(ctx *WuKongIMContext) *contextCMD {
 	c := &contextCMD{
 		ctx: ctx,
 	}
 	c.cmd = &cobra.Command{
 		Use:   "context",
-		Short: "Manage LiMaoIM configuration contexts（管理limaoim的配置信息）",
+		Short: "Manage WuKongIM configuration contexts（管理WuKongIM的配置信息）",
 	}
 	return c
 }
@@ -30,7 +30,7 @@ func newContextCMD(ctx *LiMaoContext) *contextCMD {
 func (c *contextCMD) CMD() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "context",
-		Short: "Manage LiMaoIM configuration contexts（管理limaoim的配置信息）",
+		Short: "Manage WuKongIM configuration contexts（管理WuKongIM的配置信息）",
 	}
 	c.initSubCMD(cmd)
 	return cmd
@@ -43,8 +43,8 @@ func (c *contextCMD) initSubCMD(cmd *cobra.Command) {
 		RunE:  c.add,
 	}
 	addCMD.Flags().StringVar(&c.description, "description", "", "Context description （上下文的描述）")
-	addCMD.Flags().StringVarP(&c.server, "server", "s", "tcp://127.0.0.1:7677", "Server address（limaoim服务器地址）")
-	addCMD.Flags().StringVar(&c.token, "token", "", "Token for connect limaoim （连接limaoim的token）")
+	addCMD.Flags().StringVarP(&c.server, "server", "s", "tcp://127.0.0.1:7677", "Server address（WuKongIM服务器地址）")
+	addCMD.Flags().StringVar(&c.token, "token", "", "Token for connect WuKongIM （连接WuKongIM的token）")
 	cmd.AddCommand(addCMD)
 }
 

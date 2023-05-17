@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-	lm := cmd.NewLiMao()
+	lm := cmd.NewWuKongIM()
 	lm.Execute()
 }
