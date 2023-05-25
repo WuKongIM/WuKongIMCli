@@ -7,13 +7,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var Version string
+var Commit string
+var CommitDate string
+
 type WuKongIMContext struct {
 	opts *Options
+	w    *WuKongIM
 }
 
-func NewWuKongIMContext() *WuKongIMContext {
+func NewWuKongIMContext(w *WuKongIM) *WuKongIMContext {
 	c := &WuKongIMContext{
 		opts: NewOptions(),
+		w:    w,
 	}
 	err := c.opts.Load()
 	if err != nil {
@@ -32,7 +38,7 @@ func NewWuKongIM() *WuKongIM {
 		rootCmd: &cobra.Command{
 			Use:   "wk",
 			Short: "WuKongIM 简洁，性能强劲的分布式即时通讯系统",
-			Long:  `WuKongIM 简洁，性能强劲的分布式即时通讯系统 详情查看文档：https://docs.WuKongIM.cn`,
+			Long:  `WuKongIM 简洁，性能强劲的分布式即时通讯系统 详情查看文档：https://githubim.com`,
 			CompletionOptions: cobra.CompletionOptions{
 				DisableDefaultCmd: true,
 			},
@@ -45,10 +51,11 @@ func (l *WuKongIM) addCommand(cmd CMD) {
 }
 
 func (l *WuKongIM) Execute() {
-	ctx := NewWuKongIMContext()
+	ctx := NewWuKongIMContext(l)
 	l.addCommand(newBenchCMD(ctx))
 	l.addCommand(newContextCMD(ctx))
 	l.addCommand(newTopCMD(ctx))
+	l.addCommand(newStartCMD(ctx))
 
 	if err := l.rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
