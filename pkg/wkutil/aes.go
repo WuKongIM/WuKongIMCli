@@ -1,4 +1,4 @@
-package limutil
+package wkutil
 
 import (
 	"bytes"
@@ -47,7 +47,7 @@ func AesEncrypt(origData []byte, key []byte, iv []byte, paddingFunc func([]byte,
 	return crypted, nil
 }
 
-//AesDecryptSimple 解密
+// AesDecryptSimple 解密
 func AesDecryptSimple(crypted []byte, key string, iv string) ([]byte, error) {
 	return AesDecryptPkcs5(crypted, []byte(key), []byte(iv))
 }

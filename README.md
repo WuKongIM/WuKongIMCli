@@ -14,6 +14,23 @@ WuKongIM Configuration Context "demo"
 
 ```
 
+## 服务启动和停止
+
+```shell
+# 启动
+wk start
+
+# 停止 
+wk stop
+
+# 重启
+wk restart
+
+# 检查
+wk doctor
+```
+
+
 ## 压力测试（bench）
 
 #### 一个人发送大量消息测试吞吐量

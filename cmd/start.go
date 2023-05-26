@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -23,13 +22,15 @@ import (
 )
 
 type startCMD struct {
-	ctx         *WuKongIMContext
-	installDir  string
-	installName string
-	sysos       string
-	sysarch     string
-	downloadUrl string
-	pidfile     string
+	ctx              *WuKongIMContext
+	installDir       string
+	installName      string
+	sysos            string
+	sysarch          string
+	downloadUrl      string
+	configDowloadUrl string // 配置下载地址
+	configName       string
+	pidfile          string
 
 	version string
 }
@@ -40,25 +41,27 @@ func newStartCMD(ctx *WuKongIMContext) *startCMD {
 		panic(err)
 	}
 	return &startCMD{
-		ctx:         ctx,
-		installDir:  path.Join(homeDir, "wukongim"),
-		installName: "wukongim",
-		pidfile:     "wukongim.lock",
-		downloadUrl: "https://github.com/WuKongIM/WuKongIM/releases/download/${version}/wukongim-${sysos}-${sysarch}",
+		ctx:              ctx,
+		installDir:       path.Join(homeDir, "wukongim"),
+		installName:      "wukongim",
+		pidfile:          "wukongim.lock",
+		downloadUrl:      "https://github.com/WuKongIM/WuKongIM/releases/download/${version}/wukongim-${sysos}-${sysarch}",
+		configDowloadUrl: "https://raw.githubusercontent.com/WuKongIM/WuKongIM/${version}/config/wk.yaml",
+		configName:       "wk.yaml",
 	}
 }
 
 func (s *startCMD) CMD() *cobra.Command {
 	startCmd := &cobra.Command{
 		Use:   "start",
-		Short: "Start a Wukong IM service.",
+		Short: "Start a WukongIM service.",
 		RunE:  s.run,
 	}
-	startCmd.Flags().StringVar(&s.version, "version", "v1.0.1", "Version number of Wukong IM")
+	startCmd.Flags().StringVar(&s.version, "version", "v1.0.3", "Version number of Wukong IM")
 
 	stopCMD := &cobra.Command{
 		Use:   "stop",
-		Short: "Stop a Wukong IM service.",
+		Short: "Stop a WukongIM service.",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := s.stop()
 			if err != nil {
@@ -81,11 +84,39 @@ func (s *startCMD) CMD() *cobra.Command {
 	}
 	s.ctx.w.rootCmd.AddCommand(runCMD)
 
+	restartCMD := &cobra.Command{
+		Use:   "restart",
+		Short: "Restart a WukongIM service.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := s.stop()
+			if err != nil {
+				return err
+			}
+			return s.start()
+		},
+	}
+	s.ctx.w.rootCmd.AddCommand(restartCMD)
+
 	return startCmd
 }
 
 func (s *startCMD) run(cmd *cobra.Command, args []string) error {
 
+	if err := s.init(); err != nil {
+		return err
+	}
+
+	if err := s.start(); err != nil {
+		return err
+	}
+
+	fmt.Printf("Configuration file path is %s. \n", path.Join(s.installDir, s.configName))
+	fmt.Println("WukongIM started successfully.")
+
+	return nil
+}
+
+func (s *startCMD) init() error {
 	err := os.MkdirAll(s.installDir, 0755)
 	if err != nil {
 		return err
@@ -97,34 +128,23 @@ func (s *startCMD) run(cmd *cobra.Command, args []string) error {
 
 	s.sysos = strings.ToLower(sysos)
 	s.sysarch = strings.ToLower(sysarch)
-	installPath := path.Join(s.installDir, s.installName)
-	fmt.Println("Install Dir is " + s.installDir)
-	if !s.execIsExist() {
-		tmpPath, err := s.download()
-		if err != nil {
-			return err
-		}
-		err = os.Rename(tmpPath, installPath)
-		if err != nil {
-			return err
-		}
-	}
-	if err := s.start(); err != nil {
+	fmt.Println("Installation directory is " + s.installDir)
+
+	err = s.downloadIfNeed()
+	if err != nil {
 		return err
 	}
-
-	fmt.Println("WukongIM started successfully.")
-
+	installPath := path.Join(s.installDir, s.installName)
+	err = os.Chmod(installPath, 0755)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (s *startCMD) start() error {
 	installPath := path.Join(s.installDir, s.installName)
-	err := os.Chmod(installPath, 0755)
-	if err != nil {
-		return err
-	}
-	cm := exec.Command(installPath, flag.Args()...)
+	cm := exec.Command(installPath, "--config", path.Join(s.installDir, s.configName))
 	if err := cm.Start(); err != nil {
 		return err
 	}
@@ -136,18 +156,19 @@ func (s *startCMD) stop() error {
 	strb, _ := ioutil.ReadFile(path.Join(s.installDir, s.pidfile))
 	command := exec.Command("kill", string(strb))
 	err := command.Start()
-	return err
+	if err != nil {
+		return err
+	}
+	return command.Wait()
 }
 
 func (s *startCMD) runServer() error {
 
-	installPath := path.Join(s.installDir, s.installName)
-	err := os.Chmod(installPath, 0755)
-	if err != nil {
+	if err := s.init(); err != nil {
 		return err
 	}
-
-	err = s.execCMDPrintLog(installPath, flag.Args()...)
+	installPath := path.Join(s.installDir, s.installName)
+	err := s.execCMDPrintLog(installPath, "--config", path.Join(s.installDir, s.configName))
 	if err != nil {
 		return err
 	}
@@ -156,7 +177,7 @@ func (s *startCMD) runServer() error {
 }
 
 func (s *startCMD) execCMDPrintLog(name string, arg ...string) error {
-	cm := exec.Command(name, flag.Args()...)
+	cm := exec.Command(name, arg...)
 	stderr, _ := cm.StderrPipe()
 	stdout, _ := cm.StdoutPipe()
 	if err := cm.Start(); err != nil {
@@ -187,7 +208,33 @@ func (s *startCMD) execCMDPrintLog(name string, arg ...string) error {
 	return nil
 }
 
-func (s *startCMD) execIsExist() bool {
+func (s *startCMD) downloadIfNeed() error {
+	installPath := path.Join(s.installDir, s.installName)
+	configPath := path.Join(s.installDir, s.configName)
+	if !s.binaryIsExist() {
+		tmpPath, err := s.downloadBinary()
+		if err != nil {
+			return err
+		}
+		err = os.Rename(tmpPath, installPath)
+		if err != nil {
+			return err
+		}
+	}
+	if !s.configIsExist() {
+		tmpPath, err := s.downloadConfig()
+		if err != nil {
+			return err
+		}
+		err = os.Rename(tmpPath, configPath)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *startCMD) binaryIsExist() bool {
 	installPath := path.Join(s.installDir, s.installName)
 	_, err := os.Stat(installPath)
 	if err == nil {
@@ -200,7 +247,19 @@ func (s *startCMD) execIsExist() bool {
 
 }
 
-func (s *startCMD) download() (string, error) {
+func (s *startCMD) configIsExist() bool {
+	configPath := path.Join(s.installDir, s.configName)
+	_, err := os.Stat(configPath)
+	if err == nil {
+		return true
+	}
+	if os.IsNotExist(err) {
+		return false
+	}
+	return false
+}
+
+func (s *startCMD) downloadBinary() (string, error) {
 
 	downloadURL := strings.ReplaceAll(s.downloadUrl, "${version}", s.version)
 	downloadURL = strings.ReplaceAll(downloadURL, "${sysos}", s.sysos)
@@ -238,8 +297,46 @@ func (s *startCMD) download() (string, error) {
 	barReader := bar.NewProxyReader(body)
 	//写入文件
 	writer := io.Writer(file)
-	io.Copy(writer, barReader)
+	_, err = io.Copy(writer, barReader)
 
-	return destPath, nil
+	return destPath, err
 
+}
+
+func (s *startCMD) downloadConfig() (string, error) {
+	downloadURL := strings.ReplaceAll(s.configDowloadUrl, "${version}", s.version)
+	fmt.Println("Start download wukongim config from " + downloadURL + " ...")
+	destPath := path.Join(os.TempDir(), "wukongim_config_tmp")
+
+	client := http.DefaultClient
+	client.Timeout = 60 * 10 * time.Second
+	reps, err := client.Get(downloadURL)
+	if err != nil {
+		return "", err
+	}
+	if reps.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("http status[%d] is error", reps.StatusCode)
+	}
+	//保存文件
+	file, err := os.Create(destPath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close() //关闭文件
+
+	//获取下载文件的大小
+	length := reps.Header.Get("Content-Length")
+	size, _ := strconv.ParseInt(length, 10, 64)
+	body := reps.Body //获取文件内容
+	bar := pb.Full.Start64(size)
+	bar.SetWidth(120)                         //设置进度条宽度
+	bar.SetRefreshRate(10 * time.Millisecond) //设置刷新速率
+	defer bar.Finish()
+	// create proxy reader
+	barReader := bar.NewProxyReader(body)
+	//写入文件
+	writer := io.Writer(file)
+	_, err = io.Copy(writer, barReader)
+
+	return destPath, err
 }

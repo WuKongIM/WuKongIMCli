@@ -22,7 +22,7 @@ func newContextCMD(ctx *WuKongIMContext) *contextCMD {
 	}
 	c.cmd = &cobra.Command{
 		Use:   "context",
-		Short: "Manage WuKongIM configuration contexts（管理WuKongIM的配置信息）",
+		Short: "Manage WuKongIM configuration contexts",
 	}
 	return c
 }
@@ -30,7 +30,7 @@ func newContextCMD(ctx *WuKongIMContext) *contextCMD {
 func (c *contextCMD) CMD() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "context",
-		Short: "Manage WuKongIM configuration contexts（管理WuKongIM的配置信息）",
+		Short: "Manage WuKongIM configuration contexts",
 	}
 	c.initSubCMD(cmd)
 	return cmd
@@ -39,7 +39,7 @@ func (c *contextCMD) CMD() *cobra.Command {
 func (c *contextCMD) initSubCMD(cmd *cobra.Command) {
 	addCMD := &cobra.Command{
 		Use:   "add",
-		Short: "Update or create a context（更新或创建一个狸猫IM的上下文）",
+		Short: "Update or create a context",
 		RunE:  c.add,
 	}
 	addCMD.Flags().StringVar(&c.description, "description", "", "Context description")

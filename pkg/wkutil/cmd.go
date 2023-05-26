@@ -1,4 +1,4 @@
-package limutil
+package wkutil
 
 import (
 	"os/exec"

@@ -1,4 +1,4 @@
-package limutil
+package wkutil
 
 import (
 	"bytes"
@@ -166,7 +166,7 @@ func AnyToDecimal(num string, n int) int64 {
 	return int64(newNum)
 }
 
-//GetRandomString 生成随机字符串
+// GetRandomString 生成随机字符串
 func GetRandomString(num int) string {
 	str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	bytes := []byte(str)

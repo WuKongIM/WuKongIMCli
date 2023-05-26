@@ -98,24 +98,47 @@ func (b *benchCMD) run(cmd *cobra.Command, args []string) error {
 		return position
 	}
 	log.Printf("Get the tcp address of a test user")
-
-	log.Printf("Starting WuKongIM  send/recv benchmark [msgSize=%s]", humanize.IBytes(uint64(b.msgSize)))
+	b.api.SetBaseURL(b.ctx.opts.ServerAddr)
 
 	startwg := &sync.WaitGroup{}
 	donewg := &sync.WaitGroup{}
 	trigger := make(chan struct{})
 	benchId := strconv.FormatInt(time.Now().UnixMilli(), 16) // 客户端前缀
-	bm := bench.NewBenchmark("WuKongIM", b.receiver, b.sender)
-	senderCounts := bench.MsgsPerClient(b.msgs, b.sender) // 每个客户端发送消息数量
+	senderCounts := bench.MsgsPerClient(b.msgs, b.sender)    // 每个客户端发送消息数量
 
 	subCounts := bench.MsgsPerClient(b.msgs, b.receiver)
+
+	uids := make([]string, 0, b.sender+b.receiver)
+	for i := 0; i < b.sender; i++ {
+		uid := fmt.Sprintf("%s-%d-%d", benchId, i, i+offset(i, senderCounts))
+		if b.p2p {
+			uid = b.fromUID
+		}
+		uids = append(uids, uid)
+	}
+	for i := 0; i < b.receiver; i++ {
+		uid := fmt.Sprintf("receiver-%s-%d-%d", benchId, i, i+offset(i, subCounts))
+		if b.p2p {
+			uid = b.toUID
+		}
+		uids = append(uids, uid)
+	}
+	userTcpAddrMap, err := b.api.Route(uids)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Printf("Starting WuKongIM  send/recv benchmark [msgSize=%s]", humanize.IBytes(uint64(b.msgSize)))
+
+	bm := bench.NewBenchmark("WuKongIM", b.receiver, b.sender)
 
 	for i := 0; i < b.receiver; i++ {
 		uid := fmt.Sprintf("receiver-%s-%d-%d", benchId, i, i+offset(i, subCounts))
 		if b.p2p {
 			uid = b.toUID
 		}
-		cli := client.New(b.ctx.opts.ServerAddr, client.WithUID(uid))
+		tcpAddr := userTcpAddrMap[uid]
+		cli := client.New(tcpAddr, client.WithUID(uid))
 		defer cli.Close()
 		err := cli.Connect()
 		if err != nil {
@@ -135,7 +158,8 @@ func (b *benchCMD) run(cmd *cobra.Command, args []string) error {
 		if b.p2p {
 			uid = b.fromUID
 		}
-		cli := client.New(b.ctx.opts.ServerAddr, client.WithUID(uid))
+		tcpAddr := userTcpAddrMap[uid]
+		cli := client.New(tcpAddr, client.WithUID(uid))
 		defer cli.Close()
 
 		err := cli.Connect()
@@ -165,10 +189,6 @@ func (b *benchCMD) run(cmd *cobra.Command, args []string) error {
 	fmt.Println(bm.Report())
 
 	return nil
-}
-
-func (b *benchCMD) getTCPAddr() {
-
 }
 
 func (b *benchCMD) runReceiver(bm *bench.Benchmark, cli *client.Client, startwg *sync.WaitGroup, donewg *sync.WaitGroup, numMsg int) {

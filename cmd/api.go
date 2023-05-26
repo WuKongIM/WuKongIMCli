@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/WuKongIM/WuKongIM/pkg/network"
+	"github.com/WuKongIM/WuKongIMCli/pkg/network"
 	"github.com/WuKongIM/WuKongIMCli/pkg/wkutil"
 )
 
@@ -37,7 +37,7 @@ func (a *API) Route(uids []string) (map[string]string, error) {
 	}
 
 	resultMap := make(map[string]string)
-	if userAddrs != nil {
+	if len(userAddrs) > 0 {
 		for _, userAddr := range userAddrs {
 			if len(userAddr.UIDs) > 0 {
 				for _, uid := range userAddr.UIDs {

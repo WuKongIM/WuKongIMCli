@@ -46,7 +46,7 @@ func (o *Options) ContextDir() string {
 	if u.HomeDir == "" {
 		return ""
 	}
-	return filepath.Join(u.HomeDir, ".config", "wukongim", "context")
+	return filepath.Join(u.HomeDir, "wukongim", ".config", "context")
 
 }
 
@@ -66,10 +66,14 @@ func (o *Options) Load() error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("filen----->", filen)
+
 	optionData, err := ioutil.ReadFile(filen)
 	if err != nil {
 		return err
 	}
+	fmt.Println("zzzz", string(optionData))
+
 	var optionMap map[string]interface{}
 	err = json.Unmarshal(optionData, &optionMap)
 	if err != nil {
@@ -104,7 +108,7 @@ func (o *Options) Save(name string) error {
 		return err
 	}
 
-	pf, err := os.OpenFile(p, os.O_CREATE|os.O_WRONLY, 0600)
+	pf, err := os.OpenFile(p, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}
@@ -113,7 +117,7 @@ func (o *Options) Save(name string) error {
 		return err
 	}
 
-	mf, err := os.OpenFile(o.metaFile(), os.O_CREATE|os.O_WRONLY, 0600)
+	mf, err := os.OpenFile(o.metaFile(), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}
