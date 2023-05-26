@@ -66,14 +66,11 @@ func (o *Options) Load() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("filen----->", filen)
 
 	optionData, err := ioutil.ReadFile(filen)
 	if err != nil {
 		return err
 	}
-	fmt.Println("zzzz", string(optionData))
-
 	var optionMap map[string]interface{}
 	err = json.Unmarshal(optionData, &optionMap)
 	if err != nil {
