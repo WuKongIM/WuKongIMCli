@@ -57,7 +57,7 @@ func newTopCMD(ctx *WuKongIMContext) *topCMD {
 func (t *topCMD) CMD() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "top",
-		Short: "数据监控",
+		Short: "Data monitoring",
 		RunE:  t.run,
 	}
 	t.initVar(cmd)

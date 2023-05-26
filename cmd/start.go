@@ -1,10 +1,14 @@
 package cmd
 
 import (
+	"bufio"
+	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -68,6 +72,15 @@ func (s *startCMD) CMD() *cobra.Command {
 
 	s.ctx.w.rootCmd.AddCommand(stopCMD)
 
+	runCMD := &cobra.Command{
+		Use:   "run",
+		Short: "Run a Wukong IM service.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return s.runServer()
+		},
+	}
+	s.ctx.w.rootCmd.AddCommand(runCMD)
+
 	return startCmd
 }
 
@@ -111,7 +124,6 @@ func (s *startCMD) start() error {
 	if err != nil {
 		return err
 	}
-
 	cm := exec.Command(installPath, flag.Args()...)
 	if err := cm.Start(); err != nil {
 		return err
@@ -125,6 +137,54 @@ func (s *startCMD) stop() error {
 	command := exec.Command("kill", string(strb))
 	err := command.Start()
 	return err
+}
+
+func (s *startCMD) runServer() error {
+
+	installPath := path.Join(s.installDir, s.installName)
+	err := os.Chmod(installPath, 0755)
+	if err != nil {
+		return err
+	}
+
+	err = s.execCMDPrintLog(installPath, flag.Args()...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *startCMD) execCMDPrintLog(name string, arg ...string) error {
+	cm := exec.Command(name, flag.Args()...)
+	stderr, _ := cm.StderrPipe()
+	stdout, _ := cm.StdoutPipe()
+	if err := cm.Start(); err != nil {
+		return err
+	}
+	// 正常日志
+	logScan := bufio.NewScanner(stdout)
+	go func() {
+		for logScan.Scan() {
+			log.Println(logScan.Text())
+		}
+	}()
+	// 错误日志
+	errBuf := bytes.NewBufferString("")
+	scan := bufio.NewScanner(stderr)
+	for scan.Scan() {
+		s := scan.Text()
+		log.Println("build error: ", s)
+		errBuf.WriteString(s)
+		errBuf.WriteString("\n")
+	}
+	// 等待命令执行完
+	cm.Wait()
+	if !cm.ProcessState.Success() {
+		// 执行失败，返回错误信息
+		return errors.New(errBuf.String())
+	}
+	return nil
 }
 
 func (s *startCMD) execIsExist() bool {

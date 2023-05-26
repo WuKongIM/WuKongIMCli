@@ -37,8 +37,8 @@ func NewWuKongIM() *WuKongIM {
 	return &WuKongIM{
 		rootCmd: &cobra.Command{
 			Use:   "wk",
-			Short: "WuKongIM 简洁，性能强劲的分布式即时通讯系统",
-			Long:  `WuKongIM 简洁，性能强劲的分布式即时通讯系统 详情查看文档：https://githubim.com`,
+			Short: "WuKongIM is a concise and high-performance distributed instant messaging system",
+			Long:  `This is a brief introduction to WuKongIM, a high-performance distributed instant messaging system. For more information, please refer to the documentation at https://githubim.com.`,
 			CompletionOptions: cobra.CompletionOptions{
 				DisableDefaultCmd: true,
 			},
@@ -56,6 +56,7 @@ func (l *WuKongIM) Execute() {
 	l.addCommand(newContextCMD(ctx))
 	l.addCommand(newTopCMD(ctx))
 	l.addCommand(newStartCMD(ctx))
+	l.addCommand(newDoctorCMD(ctx))
 
 	if err := l.rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

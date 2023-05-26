@@ -30,11 +30,13 @@ type benchCMD struct {
 	p2p        bool   // 是否是点对点聊天
 	fromUID    string // 如果是p2p模式 则对应的发送者
 	toUID      string // 如果是p2p模式 则对应的接受者
+	api        *API
 }
 
 func newBenchCMD(ctx *WuKongIMContext) *benchCMD {
 	b := &benchCMD{
 		ctx: ctx,
+		api: NewAPI(),
 	}
 	return b
 }
@@ -42,7 +44,7 @@ func newBenchCMD(ctx *WuKongIMContext) *benchCMD {
 func (b *benchCMD) CMD() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bench",
-		Short: "压力测试",
+		Short: "stress testing",
 		RunE:  b.run,
 	}
 	b.initVar(cmd)
@@ -95,6 +97,7 @@ func (b *benchCMD) run(cmd *cobra.Command, args []string) error {
 		}
 		return position
 	}
+	log.Printf("Get the tcp address of a test user")
 
 	log.Printf("Starting WuKongIM  send/recv benchmark [msgSize=%s]", humanize.IBytes(uint64(b.msgSize)))
 
@@ -162,6 +165,10 @@ func (b *benchCMD) run(cmd *cobra.Command, args []string) error {
 	fmt.Println(bm.Report())
 
 	return nil
+}
+
+func (b *benchCMD) getTCPAddr() {
+
 }
 
 func (b *benchCMD) runReceiver(bm *bench.Benchmark, cli *client.Client, startwg *sync.WaitGroup, donewg *sync.WaitGroup, numMsg int) {

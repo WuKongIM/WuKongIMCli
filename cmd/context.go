@@ -42,9 +42,9 @@ func (c *contextCMD) initSubCMD(cmd *cobra.Command) {
 		Short: "Update or create a context（更新或创建一个狸猫IM的上下文）",
 		RunE:  c.add,
 	}
-	addCMD.Flags().StringVar(&c.description, "description", "", "Context description （上下文的描述）")
-	addCMD.Flags().StringVarP(&c.server, "server", "s", "tcp://127.0.0.1:7677", "Server address（WuKongIM服务器地址）")
-	addCMD.Flags().StringVar(&c.token, "token", "", "Token for connect WuKongIM （连接WuKongIM的token）")
+	addCMD.Flags().StringVar(&c.description, "description", "", "Context description")
+	addCMD.Flags().StringVarP(&c.server, "server", "s", "http://127.0.0.1:5000", "Http  api server address")
+	addCMD.Flags().StringVar(&c.token, "token", "", "Token for connect WuKongIM")
 	cmd.AddCommand(addCMD)
 }
 
@@ -55,7 +55,7 @@ func (c *contextCMD) add(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 	if !validName(name) {
-		return errors.New("无效的名字")
+		return errors.New("invalid name")
 	}
 	c.ctx.opts.Description = c.description
 	c.ctx.opts.ServerAddr = c.server

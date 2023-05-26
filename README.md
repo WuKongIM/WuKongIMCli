@@ -2,7 +2,7 @@
 ## 配置服务器信息（context）
 
 ```
-lim context add demo --server 127.0.0.1:7677 --token xxxx --description "WuKongIM Demo"
+wk context add demo --server http://127.0.0.1:5000 --token xxxx --description "WuKongIM Demo"
 ```
 
 ```
@@ -10,7 +10,7 @@ lim context add demo --server 127.0.0.1:7677 --token xxxx --description "WuKongI
 WuKongIM Configuration Context "demo"
 
   Description: WuKongIM Demo
-  Server URLs: 127.0.0.1:7979
+  Server URLs: http://127.0.0.1:5000
 
 ```
 
@@ -21,7 +21,7 @@ WuKongIM Configuration Context "demo"
 一个发布者向ch001发送10万条 每条16B的消息
 
 ```
-lim bench ch001 --s 1 --size 16 
+wk bench ch001 --s 1 --size 16 
 ```
 
 ```
@@ -35,7 +35,7 @@ Pub stats: 5,173,828 msgs/sec ~ 78.95 MB/sec
 一个发布者向ch001发送1000万条 每条16B的消息
 
 ```
-lim bench ch001 --pub 1 --size 16 --msgs 10000000 
+wk bench ch001 --pub 1 --size 16 --msgs 10000000 
 ```
 
 ```
@@ -52,7 +52,7 @@ Pub stats: 4,919,947 msgs/sec ~ 75.07 MB/sec
 一个人发10万条消息一个人在线收10万条消息吞吐量测试
 
 ```
-lim bench ch001 --pub 1 -sub 1 --size 16 
+wk bench ch001 --pub 1 -sub 1 --size 16 
 ```
 
 ```
@@ -71,7 +71,7 @@ WuKongIM Pub/Sub stats: 5,894,441 msgs/sec ~ 89.94 MB/sec
 #### 一个人发N个人收测试消息吞吐量
 
 ```
-lim bench ch001 --pub 1 --sub 5 --size 16 --msgs 1000000
+wk bench ch001 --pub 1 --sub 5 --size 16 --msgs 1000000
 ```
 
 ```
@@ -103,7 +103,7 @@ WuKongIM Pub/Sub stats: 7,123,965 msgs/sec ~ 108.70 MB/sec
 #### N个人发N个人收测试消息吞吐量
 
 ```
-lim bench ch001 --pub 5 --sub 5 --size 16 --msgs 1000000
+wk bench ch001 --pub 5 --sub 5 --size 16 --msgs 1000000
 ```
 
 ```
@@ -151,13 +151,13 @@ WuKongIM Pub/Sub stats: 7,019,849 msgs/sec ~ 107.11 MB/sec
 #### 添加测试机器(用户模拟客户端连接)
 
 ```
-lim  machine add IP:PORT IP:PORT ...
+wk  machine add IP:PORT IP:PORT ...
 ```
 
 #### 上线用户
 
 ```
-lim test online 10000 
+wk test online 10000 
 ```
 
 
@@ -166,6 +166,6 @@ lim test online 10000
 #### 连接IM
 
 ```
-lim connect  [uid] [token]
+wk connect  [uid] [token]
 ```
 
