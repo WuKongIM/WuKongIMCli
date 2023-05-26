@@ -23,7 +23,10 @@ type Options struct {
 }
 
 func NewOptions() *Options {
-	opts := &Options{}
+	opts := &Options{
+		ServerAddr:  "http://127.0.0.1:5000",
+		Description: "",
+	}
 	err := os.MkdirAll(opts.ContextDir(), 0700)
 	if err != nil {
 		panic(err)

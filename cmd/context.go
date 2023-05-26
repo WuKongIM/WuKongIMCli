@@ -42,8 +42,8 @@ func (c *contextCMD) initSubCMD(cmd *cobra.Command) {
 		Short: "Update or create a context",
 		RunE:  c.add,
 	}
-	addCMD.Flags().StringVar(&c.description, "description", "", "Context description")
-	addCMD.Flags().StringVarP(&c.server, "server", "s", "http://127.0.0.1:5000", "Http  api server address")
+	addCMD.Flags().StringVar(&c.description, "description", c.ctx.opts.Description, "Context description")
+	addCMD.Flags().StringVarP(&c.server, "server", "s", c.ctx.opts.ServerAddr, "Http  api server address")
 	addCMD.Flags().StringVar(&c.token, "token", "", "Token for connect WuKongIM")
 	cmd.AddCommand(addCMD)
 }
