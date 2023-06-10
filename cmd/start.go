@@ -90,6 +90,9 @@ func (s *startCMD) CMD() *cobra.Command {
 	}
 	s.ctx.w.rootCmd.AddCommand(runCMD)
 
+	runCMD.Flags().StringVar(&s.version, "version", "v1.0.5", "Version number of WukongIM")
+	runCMD.Flags().BoolVar(&s.china, "china", false, "china mirror")
+
 	restartCMD := &cobra.Command{
 		Use:   "restart",
 		Short: "Restart a WukongIM service.",

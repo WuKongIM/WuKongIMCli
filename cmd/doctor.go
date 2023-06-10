@@ -51,6 +51,7 @@ func (d *doctorCMD) run(cmd *cobra.Command, args []string) error {
 	if check {
 		d.api.SetBaseURL(d.ctx.opts.ServerAddr)
 
+		// 请求服务状态
 		varz, err := d.api.Varz()
 		if err != nil {
 			return err
@@ -68,15 +69,17 @@ func (d *doctorCMD) run(cmd *cobra.Command, args []string) error {
 		}
 
 		// websocket server
-		// check, port, err = d.checkTCP(varz.WSSAddr)
-		// if err != nil {
-		// 	return err
-		// }
-		// if check {
-		// 	fmt.Printf("Websocket Service is running in %d.\n", port)
-		// } else {
-		// 	fmt.Printf("Websocket Service is not running in %d.\n", port)
-		// }
+		if strings.TrimSpace(varz.WSAddr) != "" {
+			check, port, err = d.checkTCP(varz.WSAddr)
+			if err != nil {
+				return err
+			}
+			if check {
+				fmt.Printf("\x1B[32m%s %d\x1b[0m\n", "[✓] Websocket Service is running in", port)
+			} else {
+				fmt.Printf("\x1B[31m%s %d\x1b[0m\n", "[x] Websocket Service is not running in", port)
+			}
+		}
 
 		// monitor server
 		if varz.MonitorOn == 1 {

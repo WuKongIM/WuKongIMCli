@@ -92,8 +92,7 @@ type Varz struct {
 	SlowConsumers int64 `json:"slow_consumers"` // 慢客户端数量
 
 	TCPAddr     string `json:"tcp_addr"`     // tcp地址
-	WSSAddr     string `json:"wss_addr"`     // wss地址
-	WSSOn       int    `json:"wss_on"`       // wss是否开启
+	WSAddr      string `json:"ws_addr"`      // wss地址
 	MonitorAddr string `json:"monitor_addr"` // 监控地址
 	MonitorOn   int    `json:"monitor_on"`   // 监控是否开启
 	Commit      string `json:"commit"`       // git commit id

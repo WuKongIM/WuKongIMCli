@@ -6,6 +6,12 @@ OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 # 获取 CPU 架构
 ARCH=$(uname -m)
 
+if [ -z "$1" ]; then
+  VERSION="v1.0.6"
+else
+  VERSION="$1"
+fi
+
 # 根据系统类型和 CPU 架构选择不同的 curl 下载地址
 if [[ "$OS" == "linux" ]]; then
   if [[ "$ARCH" == "amd64" ]]; then
@@ -37,5 +43,5 @@ fi
 echo "dolowadning wukongimcli for $OS/$REALARCH ..."
 
 # 下载 curl
-curl -L "https://github.com/WuKongIM/WuKongIMCli/releases/download/$1/wukongimcli-$OS-$REALARCH" -o /usr/local/bin/wk
+curl -L "https://github.com/WuKongIM/WuKongIMCli/releases/download/$VERSION/wukongimcli-$OS-$REALARCH" -o /usr/local/bin/wk
 chmod +x /usr/local/bin/wk
