@@ -12,6 +12,8 @@ if [[ "$OS" == "linux" ]]; then
     REALARCH="amd64"
   elif [[ "$ARCH" == "arm64" ]]; then
     REALARCH="arm64"
+  elif [[ "$ARCH" == "x86_64" ]]; then
+    REALARCH="amd64"  
   else
     echo "Unsupported architecture: $ARCH"
     exit 1

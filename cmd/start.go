@@ -22,17 +22,20 @@ import (
 )
 
 type startCMD struct {
-	ctx              *WuKongIMContext
-	installDir       string
-	installName      string
-	sysos            string
-	sysarch          string
-	downloadUrl      string
-	configDowloadUrl string // 配置下载地址
-	configName       string
-	pidfile          string
+	ctx                   *WuKongIMContext
+	installDir            string
+	installName           string
+	sysos                 string
+	sysarch               string
+	downloadUrl           string
+	chinaDownloadUrl      string
+	configDowloadUrl      string // 配置下载地址
+	chinaConfigDowloadUrl string
+	configName            string
+	pidfile               string
 
 	version string
+	china   bool
 }
 
 func newStartCMD(ctx *WuKongIMContext) *startCMD {
@@ -41,13 +44,15 @@ func newStartCMD(ctx *WuKongIMContext) *startCMD {
 		panic(err)
 	}
 	return &startCMD{
-		ctx:              ctx,
-		installDir:       path.Join(homeDir, "wukongim"),
-		installName:      "wukongim",
-		pidfile:          "wukongim.lock",
-		downloadUrl:      "https://github.com/WuKongIM/WuKongIM/releases/download/${version}/wukongim-${sysos}-${sysarch}",
-		configDowloadUrl: "https://raw.githubusercontent.com/WuKongIM/WuKongIM/${version}/config/wk.yaml",
-		configName:       "wk.yaml",
+		ctx:                   ctx,
+		installDir:            path.Join(homeDir, "wukongim"),
+		installName:           "wukongim",
+		pidfile:               "wukongim.lock",
+		downloadUrl:           "https://github.com/WuKongIM/WuKongIM/releases/download/${version}/wukongim-${sysos}-${sysarch}",
+		chinaDownloadUrl:      "https://githubim.com/wukongim/releases/${version}/wukongim-${sysos}-${sysarch}",
+		configDowloadUrl:      "https://raw.githubusercontent.com/WuKongIM/WuKongIM/${version}/config/wk.yaml",
+		chinaConfigDowloadUrl: "https://githubim.com/wukongim/releases/${version}/wk.yaml",
+		configName:            "wk.yaml",
 	}
 }
 
@@ -57,7 +62,8 @@ func (s *startCMD) CMD() *cobra.Command {
 		Short: "Start a WukongIM service.",
 		RunE:  s.run,
 	}
-	startCmd.Flags().StringVar(&s.version, "version", "v1.0.3", "Version number of Wukong IM")
+	startCmd.Flags().StringVar(&s.version, "version", "v1.0.5", "Version number of Wukong IM")
+	startCmd.Flags().BoolVar(&s.china, "china", false, "china mirror")
 
 	stopCMD := &cobra.Command{
 		Use:   "stop",
@@ -216,7 +222,7 @@ func (s *startCMD) downloadIfNeed() error {
 		if err != nil {
 			return err
 		}
-		err = os.Rename(tmpPath, installPath)
+		err = s.mv(tmpPath, installPath)
 		if err != nil {
 			return err
 		}
@@ -226,10 +232,34 @@ func (s *startCMD) downloadIfNeed() error {
 		if err != nil {
 			return err
 		}
-		err = os.Rename(tmpPath, configPath)
+		err = s.mv(tmpPath, configPath)
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (s *startCMD) mv(oldPath, newPath string) error {
+	srcFile, err := os.Open(oldPath)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.Create(newPath)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return err
+	}
+	err = os.Remove(oldPath)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -261,7 +291,12 @@ func (s *startCMD) configIsExist() bool {
 
 func (s *startCMD) downloadBinary() (string, error) {
 
-	downloadURL := strings.ReplaceAll(s.downloadUrl, "${version}", s.version)
+	downloadURL := s.downloadUrl
+	if s.china {
+		downloadURL = s.chinaDownloadUrl
+	}
+
+	downloadURL = strings.ReplaceAll(downloadURL, "${version}", s.version)
 	downloadURL = strings.ReplaceAll(downloadURL, "${sysos}", s.sysos)
 	downloadURL = strings.ReplaceAll(downloadURL, "${sysarch}", s.sysarch)
 
@@ -304,7 +339,11 @@ func (s *startCMD) downloadBinary() (string, error) {
 }
 
 func (s *startCMD) downloadConfig() (string, error) {
-	downloadURL := strings.ReplaceAll(s.configDowloadUrl, "${version}", s.version)
+	downloadURL := s.configDowloadUrl
+	if s.china {
+		downloadURL = s.chinaConfigDowloadUrl
+	}
+	downloadURL = strings.ReplaceAll(downloadURL, "${version}", s.version)
 	fmt.Println("Start download wukongim config from " + downloadURL + " ...")
 	destPath := path.Join(os.TempDir(), "wukongim_config_tmp")
 
