@@ -22,20 +22,17 @@ import (
 )
 
 type startCMD struct {
-	ctx                   *WuKongIMContext
-	installDir            string
-	installName           string
-	sysos                 string
-	sysarch               string
-	downloadUrl           string
-	chinaDownloadUrl      string
-	configDowloadUrl      string // 配置下载地址
-	chinaConfigDowloadUrl string
-	configName            string
-	pidfile               string
+	ctx               *WuKongIMContext
+	installDir        string
+	installName       string
+	sysos             string
+	sysarch           string
+	downloadUrl       string
+	configDownloadUrl string // 配置下载地址
+	configName        string
+	pidfile           string
 
 	version string
-	china   bool
 }
 
 func newStartCMD(ctx *WuKongIMContext) *startCMD {
@@ -44,15 +41,14 @@ func newStartCMD(ctx *WuKongIMContext) *startCMD {
 		panic(err)
 	}
 	return &startCMD{
-		ctx:                   ctx,
-		installDir:            path.Join(homeDir, "wukongim"),
-		installName:           "wukongim",
-		pidfile:               "wukongim.lock",
-		downloadUrl:           "https://github.com/WuKongIM/WuKongIM/releases/download/${version}/wukongim-${sysos}-${sysarch}",
-		chinaDownloadUrl:      "https://githubim.com/wukongim/releases/${version}/wukongim-${sysos}-${sysarch}",
-		configDowloadUrl:      "https://raw.githubusercontent.com/WuKongIM/WuKongIM/${version}/config/wk.yaml",
-		chinaConfigDowloadUrl: "https://githubim.com/wukongim/releases/${version}/wk.yaml",
-		configName:            "wk.yaml",
+		ctx:               ctx,
+		installDir:        path.Join(homeDir, "wukongim"),
+		installName:       "wukongim",
+		pidfile:           "wukongim.lock",
+		downloadUrl:       "https://gitee.com/WuKongDev/WuKongIM/releases/download/${version}/wukongim-${sysos}-${sysarch}",
+		configDownloadUrl: "https://gitee.com/WuKongDev/WuKongIM/blob/${version}/config/wk.yaml",
+		configName:        "wk.yaml",
+		version:           "v1.0.6",
 	}
 }
 
@@ -62,9 +58,7 @@ func (s *startCMD) CMD() *cobra.Command {
 		Short: "Start a WukongIM service.",
 		RunE:  s.run,
 	}
-	startCmd.Flags().StringVar(&s.version, "version", "v1.0.6", "Version number of Wukong IM")
-	startCmd.Flags().BoolVar(&s.china, "china", false, "china mirror")
-
+	startCmd.Flags().StringVar(&s.version, "version", s.version, "Version number of Wukong IM")
 	stopCMD := &cobra.Command{
 		Use:   "stop",
 		Short: "Stop a WukongIM service.",
@@ -90,8 +84,7 @@ func (s *startCMD) CMD() *cobra.Command {
 	}
 	s.ctx.w.rootCmd.AddCommand(runCMD)
 
-	runCMD.Flags().StringVar(&s.version, "version", "v1.0.6", "Version number of WukongIM")
-	runCMD.Flags().BoolVar(&s.china, "china", false, "china mirror")
+	runCMD.Flags().StringVar(&s.version, "version", s.version, "Version number of WukongIM")
 
 	restartCMD := &cobra.Command{
 		Use:   "restart",
@@ -295,9 +288,6 @@ func (s *startCMD) configIsExist() bool {
 func (s *startCMD) downloadBinary() (string, error) {
 
 	downloadURL := s.downloadUrl
-	if s.china {
-		downloadURL = s.chinaDownloadUrl
-	}
 
 	downloadURL = strings.ReplaceAll(downloadURL, "${version}", s.version)
 	downloadURL = strings.ReplaceAll(downloadURL, "${sysos}", s.sysos)
@@ -342,10 +332,7 @@ func (s *startCMD) downloadBinary() (string, error) {
 }
 
 func (s *startCMD) downloadConfig() (string, error) {
-	downloadURL := s.configDowloadUrl
-	if s.china {
-		downloadURL = s.chinaConfigDowloadUrl
-	}
+	downloadURL := s.configDownloadUrl
 	downloadURL = strings.ReplaceAll(downloadURL, "${version}", s.version)
 	fmt.Println("Start download wukongim config from " + downloadURL + " ...")
 	destPath := path.Join(os.TempDir(), "wukongim_config_tmp")
