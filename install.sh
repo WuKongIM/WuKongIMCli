@@ -43,5 +43,5 @@ fi
 echo "dolowadning wukongimcli for $OS/$REALARCH ..."
 
 # 下载 curl
-curl -L "https://github.com/WuKongIM/WuKongIMCli/releases/download/$VERSION/wukongimcli-$OS-$REALARCH" -o /usr/local/bin/wk
+curl -L "https://gitee.com/WuKongDev/WuKongIMCli/releases/download/$VERSION/wukongimcli-$OS-$REALARCH" -o /usr/local/bin/wk
 chmod +x /usr/local/bin/wk
