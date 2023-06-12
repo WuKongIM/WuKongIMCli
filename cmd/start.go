@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/WuKongIM/WuKongIMCli/pkg/wkutil"
 	"github.com/cheggaaa/pb/v3"
 	"github.com/spf13/cobra"
 )
@@ -31,8 +32,6 @@ type startCMD struct {
 	configDownloadUrl string // 配置下载地址
 	configName        string
 	pidfile           string
-
-	version string
 }
 
 func newStartCMD(ctx *WuKongIMContext) *startCMD {
@@ -48,7 +47,6 @@ func newStartCMD(ctx *WuKongIMContext) *startCMD {
 		downloadUrl:       "https://gitee.com/WuKongDev/WuKongIM/releases/download/${version}/wukongim-${sysos}-${sysarch}",
 		configDownloadUrl: "https://gitee.com/WuKongDev/WuKongIM/raw/${version}/config/wk.yaml",
 		configName:        "wk.yaml",
-		version:           "v1.0.6",
 	}
 }
 
@@ -58,7 +56,7 @@ func (s *startCMD) CMD() *cobra.Command {
 		Short: "Start a WukongIM service.",
 		RunE:  s.run,
 	}
-	startCmd.Flags().StringVar(&s.version, "version", s.version, "Version number of Wukong IM")
+	// startCmd.Flags().StringVar(&s.version, "version", s.version, "Version number of Wukong IM")
 	stopCMD := &cobra.Command{
 		Use:   "stop",
 		Short: "Stop a WukongIM service.",
@@ -84,7 +82,7 @@ func (s *startCMD) CMD() *cobra.Command {
 	}
 	s.ctx.w.rootCmd.AddCommand(runCMD)
 
-	runCMD.Flags().StringVar(&s.version, "version", s.version, "Version number of WukongIM")
+	// runCMD.Flags().StringVar(&s.version, "version", s.version, "Version number of WukongIM")
 
 	restartCMD := &cobra.Command{
 		Use:   "restart",
@@ -211,10 +209,18 @@ func (s *startCMD) execCMDPrintLog(name string, arg ...string) error {
 }
 
 func (s *startCMD) downloadIfNeed() error {
-	installPath := path.Join(s.installDir, s.installName)
-	configPath := path.Join(s.installDir, s.configName)
+	var (
+		version     string
+		err         error
+		installPath = path.Join(s.installDir, s.installName)
+		configPath  = path.Join(s.installDir, s.configName)
+	)
 	if !s.binaryIsExist() {
-		tmpPath, err := s.downloadBinary()
+		version, err = s.getLastVersion()
+		if err != nil {
+			return err
+		}
+		tmpPath, err := s.downloadBinary(version)
 		if err != nil {
 			return err
 		}
@@ -224,14 +230,20 @@ func (s *startCMD) downloadIfNeed() error {
 		}
 
 		// 写入版本
-		err = ioutil.WriteFile(path.Join(s.installDir, "version"), []byte(s.version), 0644)
+		err = ioutil.WriteFile(path.Join(s.installDir, "version"), []byte(version), 0644)
 		if err != nil {
 			return err
 		}
 
 	}
 	if !s.configIsExist() {
-		tmpPath, err := s.downloadConfig()
+		if version == "" {
+			version, err = s.getLastVersion()
+			if err != nil {
+				return err
+			}
+		}
+		tmpPath, err := s.downloadConfig(version)
 		if err != nil {
 			return err
 		}
@@ -268,11 +280,11 @@ func (s *startCMD) configIsExist() bool {
 	return false
 }
 
-func (s *startCMD) downloadBinary() (string, error) {
+func (s *startCMD) downloadBinary(version string) (string, error) {
 
 	downloadURL := s.downloadUrl
 
-	downloadURL = strings.ReplaceAll(downloadURL, "${version}", s.version)
+	downloadURL = strings.ReplaceAll(downloadURL, "${version}", version)
 	downloadURL = strings.ReplaceAll(downloadURL, "${sysos}", s.sysos)
 	downloadURL = strings.ReplaceAll(downloadURL, "${sysarch}", s.sysarch)
 
@@ -314,9 +326,9 @@ func (s *startCMD) downloadBinary() (string, error) {
 
 }
 
-func (s *startCMD) downloadConfig() (string, error) {
+func (s *startCMD) downloadConfig(version string) (string, error) {
 	downloadURL := s.configDownloadUrl
-	downloadURL = strings.ReplaceAll(downloadURL, "${version}", s.version)
+	downloadURL = strings.ReplaceAll(downloadURL, "${version}", version)
 	fmt.Println("Start download wukongim config from " + downloadURL + " ...")
 	destPath := path.Join(os.TempDir(), "wukongim_config_tmp")
 
@@ -351,4 +363,28 @@ func (s *startCMD) downloadConfig() (string, error) {
 	_, err = io.Copy(writer, barReader)
 
 	return destPath, err
+}
+
+// 获取最新版本
+func (s *startCMD) getLastVersion() (string, error) {
+	releaseUrl := "https://gitee.com/api/v5/repos/WuKongDev/WuKongIM/releases/latest"
+	resp, err := http.Get(releaseUrl)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", errors.New("get latest version failed")
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	releaseResultMap, err := wkutil.JSONToMap(string(body))
+	if err != nil {
+		return "", err
+	}
+	lastVersion := releaseResultMap["tag_name"].(string)
+	return lastVersion, nil
+
 }
