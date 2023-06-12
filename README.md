@@ -2,7 +2,7 @@
 ## 配置服务器信息（context）
 
 ```
-wk context add demo --server http://127.0.0.1:5000 --token xxxx --description "WuKongIM Demo"
+wk context add demo --server http://127.0.0.1:5001 --token xxxx --description "WuKongIM Demo"
 ```
 
 ```
@@ -10,7 +10,7 @@ wk context add demo --server http://127.0.0.1:5000 --token xxxx --description "W
 WuKongIM Configuration Context "demo"
 
   Description: WuKongIM Demo
-  Server URLs: http://127.0.0.1:5000
+  Server URLs: http://127.0.0.1:5001
 
 ```
 
@@ -28,6 +28,9 @@ wk restart
 
 # 检查
 wk doctor
+
+# 升级
+wk upgrade
 ```
 
 
@@ -52,7 +55,7 @@ Pub stats: 5,173,828 msgs/sec ~ 78.95 MB/sec
 一个发布者向ch001发送1000万条 每条16B的消息
 
 ```
-wk bench ch001 --pub 1 --size 16 --msgs 10000000 
+wk bench ch001 --s 1 --size 16 --msgs 10000000 
 ```
 
 ```
