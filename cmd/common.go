@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -142,4 +143,28 @@ func progressWidth() int {
 	} else {
 		return w - 30
 	}
+}
+
+func move(oldPath, newPath string) error {
+	srcFile, err := os.Open(oldPath)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.Create(newPath)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return err
+	}
+	err = os.Remove(oldPath)
+	if err != nil {
+		return err
+	}
+	return nil
 }

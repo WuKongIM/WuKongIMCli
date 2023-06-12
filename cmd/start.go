@@ -46,7 +46,7 @@ func newStartCMD(ctx *WuKongIMContext) *startCMD {
 		installName:       "wukongim",
 		pidfile:           "wukongim.lock",
 		downloadUrl:       "https://gitee.com/WuKongDev/WuKongIM/releases/download/${version}/wukongim-${sysos}-${sysarch}",
-		configDownloadUrl: "https://gitee.com/WuKongDev/WuKongIM/blob/${version}/config/wk.yaml",
+		configDownloadUrl: "https://gitee.com/WuKongDev/WuKongIM/raw/${version}/config/wk.yaml",
 		configName:        "wk.yaml",
 		version:           "v1.0.6",
 	}
@@ -218,44 +218,27 @@ func (s *startCMD) downloadIfNeed() error {
 		if err != nil {
 			return err
 		}
-		err = s.mv(tmpPath, installPath)
+		err = move(tmpPath, installPath)
 		if err != nil {
 			return err
 		}
+
+		// 写入版本
+		err = ioutil.WriteFile(path.Join(s.installDir, "version"), []byte(s.version), 0644)
+		if err != nil {
+			return err
+		}
+
 	}
 	if !s.configIsExist() {
 		tmpPath, err := s.downloadConfig()
 		if err != nil {
 			return err
 		}
-		err = s.mv(tmpPath, configPath)
+		err = move(tmpPath, configPath)
 		if err != nil {
 			return err
 		}
-	}
-	return nil
-}
-
-func (s *startCMD) mv(oldPath, newPath string) error {
-	srcFile, err := os.Open(oldPath)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-
-	dstFile, err := os.Create(newPath)
-	if err != nil {
-		return err
-	}
-	defer dstFile.Close()
-
-	_, err = io.Copy(dstFile, srcFile)
-	if err != nil {
-		return err
-	}
-	err = os.Remove(oldPath)
-	if err != nil {
-		return err
 	}
 	return nil
 }

@@ -57,6 +57,7 @@ func (l *WuKongIM) Execute() {
 	l.addCommand(newTopCMD(ctx))
 	l.addCommand(newStartCMD(ctx))
 	l.addCommand(newDoctorCMD(ctx))
+	l.addCommand(newUpgradeCMD(ctx))
 
 	if err := l.rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
