@@ -7,7 +7,7 @@ OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 ARCH=$(uname -m)
 
 if [ -z "$1" ]; then
-  VERSION="v1.0.7"
+  VERSION="v1.0.8"
 else
   VERSION="$1"
 fi
