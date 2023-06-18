@@ -19,8 +19,8 @@ import (
 
 type benchCMD struct {
 	channelStr string
-	sender     int
-	receiver   int
+	pub        int
+	sub        int
 	msgs       int
 	msgSize    int
 	ctx        *WuKongIMContext
@@ -52,8 +52,8 @@ func (b *benchCMD) CMD() *cobra.Command {
 }
 
 func (b *benchCMD) initVar(cmd *cobra.Command) {
-	cmd.Flags().IntVar(&b.sender, "s", 0, "Number of concurrent senders(发送者数量)")
-	cmd.Flags().IntVar(&b.receiver, "r", 0, "Number of concurrent receiver（接受者数量")
+	cmd.Flags().IntVar(&b.pub, "pub", 0, "Number of concurrent senders(发送者数量)")
+	cmd.Flags().IntVar(&b.sub, "sub", 0, "Number of concurrent receiver（接受者数量")
 	cmd.Flags().IntVar(&b.msgs, "msgs", 100000, "Number of messages to publish（消息数量）")
 	cmd.Flags().IntVar(&b.msgSize, "size", 128, "Size of the test messages,unit byte（测试消息大小,单位byte）")
 	cmd.Flags().BoolVar(&b.noProgress, "no-progress", false, "Disable progress bar while publishing（不显示进度条）")
@@ -76,10 +76,10 @@ func (b *benchCMD) run(cmd *cobra.Command, args []string) error {
 		b.p2p = true
 		b.fromUID = channels[0]
 		b.toUID = channels[1]
-		b.sender = 1
-		b.receiver = 1
+		b.pub = 1
+		b.sub = 1
 	}
-	if b.sender == 0 {
+	if b.pub == 0 {
 		cmd.Help()
 		return nil
 	}
@@ -104,20 +104,20 @@ func (b *benchCMD) run(cmd *cobra.Command, args []string) error {
 	donewg := &sync.WaitGroup{}
 	trigger := make(chan struct{})
 	benchId := strconv.FormatInt(time.Now().UnixMilli(), 16) // 客户端前缀
-	senderCounts := bench.MsgsPerClient(b.msgs, b.sender)    // 每个客户端发送消息数量
+	pubCounts := bench.MsgsPerClient(b.msgs, b.pub)          // 每个客户端发送消息数量
 
-	subCounts := bench.MsgsPerClient(b.msgs, b.receiver)
+	subCounts := bench.MsgsPerClient(b.msgs, b.sub)
 
-	uids := make([]string, 0, b.sender+b.receiver)
-	for i := 0; i < b.sender; i++ {
-		uid := fmt.Sprintf("%s-%d-%d", benchId, i, i+offset(i, senderCounts))
+	uids := make([]string, 0, b.pub+b.sub)
+	for i := 0; i < b.pub; i++ {
+		uid := fmt.Sprintf("%s-%d-%d", benchId, i, i+offset(i, pubCounts))
 		if b.p2p {
 			uid = b.fromUID
 		}
 		uids = append(uids, uid)
 	}
-	for i := 0; i < b.receiver; i++ {
-		uid := fmt.Sprintf("receiver-%s-%d-%d", benchId, i, i+offset(i, subCounts))
+	for i := 0; i < b.sub; i++ {
+		uid := fmt.Sprintf("sub-%s-%d-%d", benchId, i, i+offset(i, subCounts))
 		if b.p2p {
 			uid = b.toUID
 		}
@@ -128,11 +128,11 @@ func (b *benchCMD) run(cmd *cobra.Command, args []string) error {
 		panic(err)
 	}
 
-	log.Printf("Starting WuKongIM  send/recv benchmark [msgSize=%s]", humanize.IBytes(uint64(b.msgSize)))
+	log.Printf("Starting WuKongIM  pub/sub benchmark [msgSize=%s]", humanize.IBytes(uint64(b.msgSize)))
 
-	bm := bench.NewBenchmark("WuKongIM", b.receiver, b.sender)
+	bm := bench.NewBenchmark("WuKongIM", b.sub, b.pub)
 
-	for i := 0; i < b.receiver; i++ {
+	for i := 0; i < b.sub; i++ {
 		uid := fmt.Sprintf("receiver-%s-%d-%d", benchId, i, i+offset(i, subCounts))
 		if b.p2p {
 			uid = b.toUID
@@ -153,8 +153,8 @@ func (b *benchCMD) run(cmd *cobra.Command, args []string) error {
 
 	startwg.Wait()
 
-	for i := 0; i < b.sender; i++ {
-		uid := fmt.Sprintf("%s-%d-%d", benchId, i, i+offset(i, senderCounts))
+	for i := 0; i < b.pub; i++ {
+		uid := fmt.Sprintf("%s-%d-%d", benchId, i, i+offset(i, pubCounts))
 		if b.p2p {
 			uid = b.fromUID
 		}
@@ -170,7 +170,7 @@ func (b *benchCMD) run(cmd *cobra.Command, args []string) error {
 		startwg.Add(1)
 		donewg.Add(1)
 
-		go b.runSender(bm, cli, startwg, donewg, trigger, senderCounts[i])
+		go b.runSender(bm, cli, startwg, donewg, trigger, pubCounts[i])
 	}
 	if !b.noProgress {
 		uiprogress.Start()
@@ -244,7 +244,7 @@ func (b *benchCMD) runSender(bm *bench.Benchmark, cli *client.Client, startwg *s
 	startwg.Done()
 	var progress *uiprogress.Bar
 
-	log.Printf("Starting sender, sending %s messages", humanize.Comma(int64(numMsg)))
+	log.Printf("Starting pub, sending %s messages", humanize.Comma(int64(numMsg)))
 
 	if !b.noProgress {
 		progress = uiprogress.AddBar(numMsg).AppendCompleted().PrependElapsed()
@@ -259,12 +259,12 @@ func (b *benchCMD) runSender(bm *bench.Benchmark, cli *client.Client, startwg *s
 	start := time.Now()
 	var finishWg = &sync.WaitGroup{}
 	b.publisher(cli, progress, msg, numMsg, finishWg)
+
 	err := cli.Flush()
 	if err != nil {
 		log.Fatalf("Could not flush the connection: %v", err)
 	}
 	finishWg.Wait()
-
 	bm.AddPubSample(bench.NewSample(numMsg, b.msgSize, start, time.Now(), cli))
 
 	donewg.Done()

@@ -44,7 +44,6 @@ type topCMD struct {
 func newTopCMD(ctx *WuKongIMContext) *topCMD {
 	b := &topCMD{
 		ctx:               ctx,
-		urlStr:            "http://127.0.0.1:1516",
 		httpClient:        &http.Client{},
 		delay:             1,
 		statsCh:           make(chan *Stats),
@@ -91,7 +90,7 @@ func (t *topCMD) run(cmd *cobra.Command, args []string) error {
 
 func (t *topCMD) request(path string) (interface{}, error) {
 	var statz interface{}
-	uri := t.urlStr + path
+	uri := t.ctx.opts.ServerAddr + path
 	switch path {
 	case "/varz":
 		statz = &Varz{}
