@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/WuKongIM/WuKongIM/pkg/client"
-	"github.com/WuKongIM/WuKongIM/pkg/wkproto"
 	"github.com/WuKongIM/WuKongIMCli/bench"
+	wkproto "github.com/WuKongIM/WuKongIMGoProto"
 	"github.com/dustin/go-humanize"
 	"github.com/gosuri/uiprogress"
 	"github.com/spf13/cobra"
