@@ -3,8 +3,8 @@ module github.com/WuKongIM/WuKongIMCli
 go 1.18
 
 require (
-	github.com/WuKongIM/WuKongIM v1.1.4
-	github.com/WuKongIM/WuKongIMGoProto v1.0.0
+	github.com/WuKongIM/WuKongIM v1.2.0
+	github.com/WuKongIM/WuKongIMGoProto v1.0.1-0.20231009045011-552aa036a108
 	github.com/cheggaaa/pb/v3 v3.0.8
 	github.com/dustin/go-humanize v1.0.0
 	github.com/gizak/termui/v3 v3.1.0
