@@ -6,6 +6,8 @@ import (
 
 	"github.com/WuKongIM/WuKongIMCli/pkg/network"
 	"github.com/WuKongIM/WuKongIMCli/pkg/wkutil"
+	wkproto "github.com/WuKongIM/WuKongIMGoProto"
+	"github.com/sendgrid/rest"
 )
 
 type API struct {
@@ -50,6 +52,18 @@ func (a *API) Route(uids []string) (map[string]string, error) {
 
 }
 
+func (a *API) UpdateToken(uid, token string, deviceFlag wkproto.DeviceFlag, deviceLevel wkproto.DeviceLevel) error {
+
+	resp, err := network.Post(a.getFullURL("/user/token"), []byte(wkutil.ToJSON(map[string]interface{}{"uid": uid, "token": token, "device_flag": deviceFlag, "device_level": deviceLevel})), nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return a.handleError(resp)
+	}
+	return nil
+}
+
 func (a *API) Varz() (*Varz, error) {
 	resp, err := network.Get(a.getFullURL("/varz"), nil, nil)
 	if err != nil {
@@ -66,36 +80,102 @@ func (a *API) Varz() (*Varz, error) {
 	return varz, nil
 }
 
+func (a *API) CreateChannel(req *ChannelCreateReq) error {
+
+	resp, err := network.Post(a.getFullURL("/channel"), []byte(wkutil.ToJSON(req)), nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return a.handleError(resp)
+	}
+	return nil
+}
+
+// SubscriberAdd 添加订阅者
+func (a *API) SubscriberAdd(req *SubscriberAddReq) error {
+	resp, err := network.Post(a.getFullURL("/channel/subscriber_add"), []byte(wkutil.ToJSON(req)), nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return a.handleError(resp)
+	}
+	return nil
+}
+
+// SubscriberRemove 移除订阅者
+func (a *API) SubscriberRemove(req *SubscriberReq) error {
+	resp, err := network.Post(a.getFullURL("/channel/subscriber_remove"), []byte(wkutil.ToJSON(req)), nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return a.handleError(resp)
+	}
+	return nil
+}
+
+// DenylistAdd 添加黑名单
+func (a *API) DenylistAdd(req *ChannelUidsReq) error {
+	resp, err := network.Post(a.getFullURL("/channel/blacklist_add"), []byte(wkutil.ToJSON(req)), nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return a.handleError(resp)
+	}
+	return nil
+}
+
+// DenylistRemove 移除黑名单
+func (a *API) DenylistRemove(req *ChannelUidsReq) error {
+	resp, err := network.Post(a.getFullURL("/channel/blacklist_remove"), []byte(wkutil.ToJSON(req)), nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return a.handleError(resp)
+	}
+	return nil
+}
+
+func (a *API) AllowlistAdd(req *ChannelUidsReq) error {
+	resp, err := network.Post(a.getFullURL("/channel/whitelist_add"), []byte(wkutil.ToJSON(req)), nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return a.handleError(resp)
+	}
+	return nil
+}
+
+func (a *API) AllowlistRemove(req *ChannelUidsReq) error {
+	resp, err := network.Post(a.getFullURL("/channel/whitelist_remove"), []byte(wkutil.ToJSON(req)), nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return a.handleError(resp)
+	}
+	return nil
+}
+
+func (a *API) handleError(resp *rest.Response) error {
+	if resp.StatusCode == http.StatusBadRequest {
+		resultMap, err := wkutil.JSONToMap(resp.Body)
+		if err != nil {
+			return err
+		}
+		msg, ok := resultMap["msg"]
+		if ok {
+			return errors.New(msg.(string))
+		}
+	}
+	return errors.New("未知错误")
+}
+
 func (a *API) getFullURL(path string) string {
 	return a.baseURL + path
-}
-
-type userAddrResp struct {
-	TCPAddr string   `json:"tcp_addr"`
-	WSAddr  string   `json:"ws_addr"`
-	UIDs    []string `json:"uids"`
-}
-
-type Varz struct {
-	ServerID    string  `json:"server_id"`   // 服务端ID
-	ServerName  string  `json:"server_name"` // 服务端名称
-	Version     string  `json:"version"`     // 服务端版本
-	Connections int     `json:"connections"` // 当前连接数量
-	Uptime      string  `json:"uptime"`      // 上线时间
-	Mem         int64   `json:"mem"`         // 内存
-	CPU         float64 `json:"cpu"`         // cpu
-
-	InMsgs        int64 `json:"in_msgs"`        // 流入消息数量
-	OutMsgs       int64 `json:"out_msgs"`       // 流出消息数量
-	InBytes       int64 `json:"in_bytes"`       // 流入字节数量
-	OutBytes      int64 `json:"out_bytes"`      // 流出字节数量
-	SlowConsumers int64 `json:"slow_consumers"` // 慢客户端数量
-
-	TCPAddr     string `json:"tcp_addr"`     // tcp地址
-	WSAddr      string `json:"ws_addr"`      // wss地址
-	MonitorAddr string `json:"monitor_addr"` // 监控地址
-	MonitorOn   int    `json:"monitor_on"`   // 监控是否开启
-	Commit      string `json:"commit"`       // git commit id
-	CommitDate  string `json:"commit_date"`  // git commit date
-	TreeState   string `json:"tree_state"`   // git tree state
 }

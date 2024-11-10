@@ -8,8 +8,13 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"sync"
+	"time"
 
+	"github.com/WuKongIM/WuKongIM/pkg/client"
+	wkproto "github.com/WuKongIM/WuKongIMGoProto"
 	"github.com/spf13/cobra"
+	"go.uber.org/atomic"
 	terminal "golang.org/x/term"
 )
 
@@ -167,4 +172,68 @@ func move(oldPath, newPath string) error {
 		return err
 	}
 	return nil
+}
+
+type testClient struct {
+	cli       *client.Client
+	sendSeq   atomic.Uint64
+	interval  time.Duration
+	lastSend  time.Time
+	recvCount atomic.Uint64
+
+	sendMap     map[string]uint64
+	sendMapLock sync.Mutex
+	sendLock    sync.Mutex
+
+	recvMap     map[string]uint64
+	recvMapLock sync.Mutex
+
+	preTo *Channel // 上一次发送的目标
+}
+
+func newTestClient(cli *client.Client, interval time.Duration) *testClient {
+	return &testClient{
+		cli:      cli,
+		interval: interval,
+		recvMap:  make(map[string]uint64),
+		sendMap:  make(map[string]uint64),
+	}
+}
+
+func (t *testClient) IsConnected() bool {
+	return t.cli.IsConnected()
+}
+
+func (t *testClient) Connect() error {
+	return t.cli.Connect()
+}
+
+func (t *testClient) SendMessageToIfNeed(channel *Channel) error {
+	t.sendLock.Lock()
+	defer t.sendLock.Unlock()
+	if time.Since(t.lastSend) < t.interval {
+		return nil
+	}
+	t.lastSend = time.Now()
+	t.sendMapLock.Lock()
+	t.sendMap[channel.ChannelId]++
+	t.sendMapLock.Unlock()
+	t.preTo = channel
+	return t.cli.SendMessage(client.NewChannel(channel.ChannelId, channel.ChannelType), []byte(fmt.Sprintf(`{"type":1,"content":"[%d]hello world!"}`, t.sendSeq.Inc())))
+}
+
+func (t *testClient) SetOnRecv(onRecvMessage func(recv *wkproto.RecvPacket) error) {
+	t.cli.SetOnRecv(onRecvMessage)
+}
+
+func (t *testClient) RecvInc(recv *wkproto.RecvPacket) {
+	t.recvCount.Inc()
+
+	t.recvMapLock.Lock()
+	defer t.recvMapLock.Unlock()
+	t.recvMap[recv.FromUID]++
+}
+
+func (t *testClient) GetPreTo() *Channel {
+	return t.preTo
 }

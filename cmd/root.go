@@ -52,12 +52,18 @@ func (l *WuKongIM) addCommand(cmd CMD) {
 
 func (l *WuKongIM) Execute() {
 	ctx := NewWuKongIMContext(l)
-	l.addCommand(newBenchCMD(ctx))
-	l.addCommand(newContextCMD(ctx))
-	l.addCommand(newTopCMD(ctx))
-	l.addCommand(newStartCMD(ctx))
-	l.addCommand(newDoctorCMD(ctx))
-	l.addCommand(newUpgradeCMD(ctx))
+	l.addCommand(newContextCMD(ctx))    // 上下文命令
+	l.addCommand(newBenchCMD(ctx))      // 压力测试命令
+	l.addCommand(newTopCMD(ctx))        // top命令
+	l.addCommand(newStartCMD(ctx))      // 启动命令
+	l.addCommand(newDoctorCMD(ctx))     // 检查命令
+	l.addCommand(newUpgradeCMD(ctx))    // 升级命令
+	l.addCommand(newChannelCMD(ctx))    // 频道命令
+	l.addCommand(newSubscriberCMD(ctx)) // 订阅者命令
+	l.addCommand(newMockCMD(ctx))       // mock命令
+	l.addCommand(newUserCMD(ctx))       // 用户命令
+	l.addCommand(newDenylistCMD(ctx))   // 黑名单命令
+	l.addCommand(newAllowlistCMD(ctx))  // 白名单命令
 
 	if err := l.rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

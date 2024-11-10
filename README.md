@@ -36,6 +36,17 @@ wk upgrade
 
 ## 压力测试（bench）
 
+
+###
+
+```
+wk bench --pub 10 --msgs 100000 --channelNum 10 --channelType 1
+```
+
+```
+wk bench --pub 10 --msgs 100000 --channel  123,234,456
+```
+
 #### 一个人发送大量消息测试吞吐量
 
 一个发布者向ch001发送10万条.
@@ -123,7 +134,7 @@ WuKongIM Pub/Sub stats: 7,123,965 msgs/sec ~ 108.70 MB/sec
 #### N个人发N个人收测试消息吞吐量
 
 ```
-wk bench ch001 --pub 5 --sub 5 --size 16 --msgs 1000000
+wk bench  --pub 5 --sub 5 --size 16 --msgs 1000000
 ```
 
 ```
@@ -189,3 +200,187 @@ wk test online 10000
 wk connect  [uid] [token]
 ```
 
+### 创建用户
+
+创建前缀为usr的100个用户 (usr1,usr2,usr3.....)
+
+```
+
+wk user create --prefix usr --num 100
+
+```
+
+### 创建频道
+
+创建前缀为ch的100个频道 (ch1,ch2,ch3.....)(默认频道类型为2 即群聊频道)
+
+```
+wk channel create --prefix ch --num 100
+```
+
+## 订阅者（subscriber）
+
+### 添加订阅者
+
+添加指定用户到指定前缀的频道
+
+```
+
+wk subscriber add --chPrefix ch --chType=2 --chNum=10 --list u1,u2,u3
+
+```
+每个频道前缀为ch的频道添加10000个前缀为usr的订阅者 （订阅者需要通过创建用户创建）
+
+```
+wk subscriber add --chPrefix ch --chType=2 --chNum=50 --subPrefix usr --subNum 10000
+```
+
+### 移除订阅者
+
+移除指定用户到指定前缀的频道
+
+```
+
+wk subscriber remove --chPrefix ch --chType=2 --chNum=10 --list u1,u2,u3
+
+```
+
+移除每个频道前缀为ch的频道移除10000个前缀为usr的订阅者
+
+```
+
+wk subscriber remove --chPrefix ch --chType=2 --chNum=50 --subPrefix usr --subNum 10000
+
+```
+
+## 黑明单（denylist）
+
+### 添加黑名单
+
+添加指定用户到指定前缀的频道黑明单
+
+```
+
+wk denylist add --chPrefix ch --chType=2 --chNum=10 --list u1,u2,u3
+
+```
+
+每个频道前缀为ch的频道添加10000个前缀为usr的黑名单 
+
+```
+
+wk denylist add --chPrefix ch --chType=2 --chNum=50 --subPrefix usr --subNum 10000
+
+```
+
+### 移除黑名单
+
+移除指定用户到指定前缀的频道黑名单
+
+```
+
+wk denylist remove --chPrefix ch --chType=2 --chNum=10 --list u1,u2,u3
+
+```
+
+移除每个频道前缀为ch的频道移除10000个前缀为usr的黑名单
+
+```
+
+wk denylist remove --chPrefix ch --chType=2 --chNum=50 --subPrefix usr --subNum 10000
+
+```
+
+## 白名单（allowlist）
+
+
+### 添加白名单
+
+添加指定用户到指定前缀的频道白名单
+
+```
+
+wk allowlist add --chPrefix ch --chType=2 --chNum=10 --list u1,u2,u3
+
+```
+
+每个频道前缀为ch的频道添加10000个前缀为usr的白名单 
+
+```
+
+wk allowlist add --chPrefix ch --chType=2 --chNum=50 --subPrefix usr --subNum 10000
+
+```
+
+### 移除白名单
+
+移除指定用户到指定前缀的频道白名单
+
+```
+wk allowlist remove --chPrefix ch --chType=2 --chNum=10 --list u1,u2,u3
+
+```
+
+移除每个频道前缀为ch的频道移除10000个前缀为usr的白名单
+
+```
+
+wk allowlist remove --chPrefix ch --chType=2 --chNum=50 --subPrefix usr --subNum 10000
+
+```
+
+
+## mock命令
+
+#### 模拟上线
+
+```
+wk mock online --num 15000
+
+num: 在线用户数量
+```
+
+#### 模拟单聊
+
+模拟1000个用户每隔5秒随机向一个频道发送一条消息（频道前缀为ch 频道数量为100个）
+
+```
+wk mock chat --num 1000 --prefix=usr --interval 5s --chPrefix ch --chNum 100
+```
+
+模拟1000个用户每隔5秒随机向一个用户发送一条消息
+
+```
+wk mock chat --num 1000 --prefix=usr --interval 5s
+```
+
+
+<!-- 
+1000同时在线用户，每个用户每5秒发送一次消息
+
+``` 
+wk mock chat --num 1000 --prefix=usr --interval 5s
+
+num: 同时用户在线数量
+prefix: 用户id前缀
+interval: 在线用户发送消息间隔时间 单位毫秒
+```
+
+
+#### 模拟群聊
+
+模拟100个群 每个群500人 每个群成员在线率50% 每个群成员每5秒发送一次消息
+
+```
+
+wk mock chat --type group  --num 100 --prefix=ch  --subNum 500 --subPrefix=usr --onlineRate 0.5 --interval 5s
+
+type: 模拟类型 默认为单聊
+num: 群数量，模拟创建的群数量
+prefix: 群id前缀
+subNum: 每个群的成员数量
+subPrefix: 订阅者前缀
+onlineRate: 每个群的成员在线率
+interval: 在线群成员发送消息间隔时间 单位毫秒
+
+``` -->
