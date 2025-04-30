@@ -267,7 +267,7 @@ func (m *mockCMD) onlineUser(num int, callback func(cli *testClient)) error {
 
 	for _, uid := range m.uids {
 		tcpAddr := userTcpAddrMap[uid]
-		cli := client.New(tcpAddr, client.WithUID(uid), client.WithAutoReconn(true))
+		cli := client.New(tcpAddr, client.WithUID(uid), client.WithAutoReconn(false))
 		testCli := newTestClient(cli, m.mockVar.interval)
 		m.userClientMap[uid] = testCli
 

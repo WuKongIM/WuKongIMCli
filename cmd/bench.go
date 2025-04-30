@@ -16,22 +16,20 @@ import (
 )
 
 type benchCMD struct {
-	channels    []string
-	channelType uint8
-	channelNum  int // 频道数量
-	pub         int
-	sub         int
-	msgs        int
-	msgSize     int
-	ctx         *WuKongIMContext
-	noProgress  bool
-	channel     *client.Channel
-	channelList []*client.Channel
-	pubSleep    time.Duration
-	p2p         bool   // 是否是点对点聊天
-	fromUID     string // 如果是p2p模式 则对应的发送者
-	toUID       string // 如果是p2p模式 则对应的接受者
-	api         *API
+	channels     []string
+	channelType  uint8
+	channelNum   int // 频道数量
+	pub          int
+	sub          int
+	msgs         int
+	msgSize      int
+	ctx          *WuKongIMContext
+	noProgress   bool
+	channel      *client.Channel
+	channelList  []*client.Channel
+	pubSleep     time.Duration
+	api          *API
+	senderPrefix string // 发送者前缀
 }
 
 func newBenchCMD(ctx *WuKongIMContext) *benchCMD {
@@ -55,6 +53,7 @@ func (b *benchCMD) CMD() *cobra.Command {
 func (b *benchCMD) initVar(cmd *cobra.Command) {
 	cmd.Flags().IntVar(&b.pub, "pub", 0, "Number of concurrent senders(发送者数量)")
 	cmd.Flags().IntVar(&b.sub, "sub", 0, "Number of concurrent receiver（接受者数量")
+	cmd.Flags().StringVar(&b.senderPrefix, "senderPrefix", "", "Sender prefix（发送者前缀）")
 	cmd.Flags().IntVar(&b.msgs, "msgs", 100000, "Number of messages to publish（消息数量）")
 	cmd.Flags().IntVar(&b.msgSize, "size", 128, "Size of the test messages,unit byte（测试消息大小,单位byte）")
 	cmd.Flags().BoolVar(&b.noProgress, "no-progress", false, "Disable progress bar while publishing（不显示进度条）")
@@ -86,8 +85,11 @@ func (b *benchCMD) run(cmd *cobra.Command, args []string) error {
 
 	// ========== 生成用户uid ==========
 	userPrefix := strconv.FormatInt(time.Now().UnixMilli(), 16) // 客户端前缀
-	publishers := []string{}                                    // 发布者
-	subscribers := []string{}                                   // 订阅者
+	if b.senderPrefix != "" {
+		userPrefix = b.senderPrefix
+	}
+	publishers := []string{}  // 发布者
+	subscribers := []string{} // 订阅者
 	for i := 0; i < b.pub; i++ {
 		uid := fmt.Sprintf("%s-%d", userPrefix, i)
 		publishers = append(publishers, uid)
@@ -279,7 +281,7 @@ func (b *benchCMD) publisher(cli *client.Client, progress *uiprogress.Bar, msg [
 	for i := 0; i < numMsg; i++ {
 
 		finishWg.Add(1)
-		err = cli.SendMessage(b.channelList[i%len(b.channelList)], msg, client.SendOptionWithNoEncrypt(false))
+		err = cli.SendMessage(b.channelList[i%len(b.channelList)], []byte(fmt.Sprintf(`{"content":"%08d", "type":1}`, i+1)), client.SendOptionWithNoEncrypt(false))
 		if err != nil {
 			log.Fatalf("SendMessage error: %v", err)
 		}

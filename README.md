@@ -345,7 +345,7 @@ num: 在线用户数量
 模拟1000个用户每隔5秒随机向一个频道发送一条消息（频道前缀为ch 频道数量为100个）
 
 ```
-wk mock chat --num 1000 --prefix=usr --interval 5s --chPrefix ch --chNum 100
+wk mock chat --num 1000 --prefix=usr --interval 5s --chPrefix ch --chType=6 --chNum 100
 ```
 
 模拟1000个用户每隔5秒随机向一个用户发送一条消息
